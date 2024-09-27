@@ -1,0 +1,5 @@
+package com.example.todo.custom_exception;
+
+public class ResourceNotFoundException {
+
+}

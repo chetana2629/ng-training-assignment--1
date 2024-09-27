@@ -1,0 +1,54 @@
+package com.example.todo.controller;
+
+import com.example.todo.custom_exception.ResourceNotFoundException;
+import com.example.todo.entity.Task;
+import com.example.todo.repository.TaskRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
+
+@RestController
+@RequestMapping("/api/tasks")
+public class TaskController {
+
+    private final TaskRepository taskRepository;
+
+    @Autowired
+    public TaskController(TaskRepository taskRepository) {
+        this.taskRepository = taskRepository;
+    }
+
+    @GetMapping
+    public Page<Task> getAllTasks(@RequestParam(required = false) String assignedTo,
+                                   @RequestParam(required = false) String status,
+                                   @RequestParam(required = false) String dueDate,
+                                   @RequestParam(required = false) String priority,
+                                   @RequestParam(required = false) String comments,
+                                   Pageable pageable) {
+        return taskRepository.findAllBySearch(assignedTo, status, dueDate, priority, comments, pageable);
+    }
+
+    @PostMapping
+    public Task createTask(@Valid @RequestBody Task task) {
+        return taskRepository.save(task);
+    }
+
+    @PutMapping("/{id}")
+    public Task updateTask(@PathVariable Long id, @Valid @RequestBody Task updatedTask) {
+        Task existingTask = taskRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Task Not Found"));                     //orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        existingTask.setAssignedTo(updatedTask.getAssignedTo());
+        existingTask.setStatus(updatedTask.getStatus());
+        existingTask.setDueDate(updatedTask.getDueDate());
+        existingTask.setPriority(updatedTask.getPriority());
+        existingTask.setComments(updatedTask.getComments());
+        return taskRepository.save(existingTask);
+    }
+
+    @DeleteMapping("/{id}")
+    public void deleteTask(@PathVariable Long id) {
+        taskRepository.deleteById(id);
+    }
+}
